@@ -3,26 +3,38 @@ require('./lib/globals');
 const app = require('./app');
 const config = require('./config/config');
 const logger = require('./lib/logger');
+const db = require('../src/lib/db');
+const { run } = require('nodemon/lib/monitor');
+const runSequelizeAuto = false;
+
+let server;
 
 //Main server entry point
-let server;
-gxLogger(gxLoggerType.INFO, 'Starting API server...');
+async function main() {
+  gxLogger(gxLoggerType.INFO, 'Starting API server...');
 
-const db = require('../src/lib/db');
+  const db = require('../src/lib/db');
 
-gxLogger(gxLoggerType.INFO, 'Testing sequelize connection...');
-db.authenticate()
-  .then((res) => {
-    gxLogger(gxLoggerType.INFO, `Connection to the database was successful!`);
-    server = app.listen(config.serverPort, () => {
-      gxLogger(gxLoggerType.INFO, `API server is now running on port ${config.serverPort}`);
+  gxLogger(gxLoggerType.INFO, 'Testing sequelize connection...');
+
+  db.authenticate()
+    .then((res) => {
+      gxLogger(gxLoggerType.INFO, `Connection to the database was successful!`);
+      server = app.listen(config.serverPort, () => {
+        gxLogger(gxLoggerType.INFO, `API server is now running on port ${config.serverPort}`);
+
+        if (runSequelizeAuto) {
+          gxLogger(gxLoggerType.INFO, 'Starting sequelize-auto...');
+          require('./lib/sequelizeAuto');
+        }
+      });
+    })
+    .catch((err) => {
+      gxLogger(gxLoggerType.ERROR, `Connection to the database threw an error`);
+      gxLogger(gxLoggerType.ERROR, err);
+      exitHandler();
     });
-  })
-  .catch((err) => {
-    gxLogger(gxLoggerType.ERROR, `Connection to the database threw an error`);
-    gxLogger(gxLoggerType.ERROR, err);
-    exitHandler();
-  });
+}
 
 const exitHandler = () => {
   if (server) {
@@ -49,3 +61,5 @@ process.on('SIGTERM', () => {
     server.close();
   }
 });
+
+main();

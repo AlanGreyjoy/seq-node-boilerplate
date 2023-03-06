@@ -2,6 +2,9 @@
  * Example Service File
  */
 
+const initModels = require('../../models/init-models');
+const models = initModels(require('../../lib/db'));
+
 let mockUserData = [
   {
     firstName: 'Dwight',
@@ -15,24 +18,22 @@ let mockUserData = [
   },
 ];
 
-const { User } = require('../../models');
-
 module.exports.bulkSeed = async () => {
-  await User.bulkCreate(mockUserData);
+  await models.users.bulkCreate(mockUserData);
 };
 
 module.exports.getAllUsers = async () => {
-  return User.findAll();
+  return models.users.findAll();
 };
 
 module.exports.getUser = async (userId) => {
   const user = await User.findByPk(userId);
   if (!user) gxApiErrorNotFound('There was no user found by that id!');
-  return User.findByPk(userId);
+  return models.users.findByPk(userId);
 };
 
 module.exports.createUser = async (user) => {
-  return User.create(user);
+  return models.users.create(user);
 };
 
 module.exports.updateUser = async (user, userId) => {
@@ -42,7 +43,7 @@ module.exports.updateUser = async (user, userId) => {
 };
 
 module.exports.deleteUser = async (userId) => {
-  const user = await User.findByPk(userId);
+  const user = await models.users.findByPk(userId);
   if (!user) gxApiErrorNotFound('There was no user found by that id!');
-  return await User.destroy({ where: { id: userId } });
+  return await models.users.destroy({ where: { id: userId } });
 };
